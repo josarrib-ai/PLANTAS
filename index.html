@@ -1,1 +1,895 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FloraGest">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#064e3b">
+    <title>FloraGest · Valladolid & Mogro</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { margin: 0; background: #f2f5f3; color: #1e293b; padding-bottom: 92px; }
+        header { background: #064e3b; color: #fff; padding: 14px 16px 12px; position: sticky; top: 0; z-index: 30; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .brand h1 { margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+        .brand p { margin: 2px 0 0; font-size: 11px; color: #a7f3d0; }
+        .top-actions { display: flex; gap: 6px; }
+        .btn-top { background: #047857; color: #fff; border: 1px solid #10b981; border-radius: 10px; padding: 7px 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .loc-tabs { display: grid; grid-template-columns: 1fr 1fr 1fr; background: #022c22; padding: 4px; border-radius: 12px; gap: 4px; }
+        .loc-btn { border: none; background: transparent; color: #a7f3d0; padding: 8px; border-radius: 9px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .loc-btn.active { background: #10b981; color: #022c22; }
+        main { max-width: 600px; margin: 0 auto; padding: 14px; }
+        .card { background: #fff; border-radius: 16px; padding: 14px; border: 1px solid #e2e8f0; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .stats-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .climate-info h2 { margin: 0; font-size: 13px; color: #064e3b; }
+        .climate-info p { margin: 3px 0 0; font-size: 11px; color: #64748b; }
+        .counters { display: flex; gap: 8px; }
+        .counter-box { background: #ecfdf5; padding: 6px 10px; border-radius: 10px; text-align: center; min-width: 54px; }
+        .counter-box.warn { background: #fffbeb; }
+        .counter-num { display: block; font-size: 15px; font-weight: 800; color: #065f46; }
+        .counter-box.warn .counter-num { color: #b45309; }
+        .counter-lbl { font-size: 10px; font-weight: 700; color: #475569; }
+        .search-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        input[type="text"], input[type="date"], input[type="number"], select, textarea {
+            width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 14px; background: #fff; color: #0f172a;
+        }
+        .plant-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 12px; overflow: hidden; }
+        .plant-body { display: flex; gap: 12px; padding: 12px; }
+        .plant-thumb { width: 76px; height: 76px; border-radius: 12px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; border: 1px solid #d1fae5; font-size: 26px; position: relative; }
+        .plant-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-count { position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.75); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 6px; }
+        .badge { display: inline-block; padding: 2px 7px; border-radius: 6px; font-size: 10px; font-weight: 800; margin-right: 4px; }
+        .badge-va { background: #ffedd5; color: #9a3412; }
+        .badge-mo { background: #e0f2fe; color: #075985; }
+        .badge-ok { background: #d1fae5; color: #065f46; }
+        .badge-obs { background: #fef3c7; color: #92400e; }
+        .badge-bad { background: #ffe4e6; color: #9f1239; }
+        .plant-title { margin: 4px 0 2px; font-size: 15px; font-weight: 800; }
+        .plant-meta { margin: 0; font-size: 12px; color: #475569; }
+        .plant-next { margin: 5px 0 0; font-size: 11px; color: #b45309; font-weight: 700; }
+        .plant-notes { margin: 0 12px 10px; padding: 8px 10px; background: #f8fafc; border-radius: 10px; font-size: 12px; color: #475569; }
+        .plant-actions { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid #f1f5f9; background: #f8fafc; }
+        .act-btn { border: none; background: transparent; padding: 11px 4px; font-size: 12px; font-weight: 700; cursor: pointer; border-right: 1px solid #f1f5f9; }
+        .act-btn:last-child { border-right: none; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid #e2e8f0; display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px 4px 12px; z-index: 30; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+        .nav-item { border: none; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #64748b; cursor: pointer; position: relative; }
+        .nav-item.active { color: #047857; }
+        .nav-icon { font-size: 18px; }
+        .nav-badge { position: absolute; top: -2px; right: 22%; background: #e11d48; color: #fff; font-size: 10px; font-weight: 800; padding: 1px 5px; border-radius: 10px; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.7); z-index: 50; align-items: flex-end; justify-content: center; }
+        .modal.open { display: flex; }
+        .modal-box { background: #fff; width: 100%; max-width: 540px; border-radius: 24px 24px 0 0; padding: 18px; max-height: 92vh; overflow-y: auto; }
+        .modal-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 12px; }
+        .modal-head h3 { margin: 0; font-size: 16px; font-weight: 800; }
+        .close-btn { border: none; background: #f1f5f9; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; font-weight: 800; cursor: pointer; }
+        .field { margin-bottom: 10px; }
+        .field label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 4px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn-primary { width: 100%; background: #047857; color: #fff; border: none; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; }
+        .btn-secondary { background: #e2e8f0; color: #1e293b; border: none; padding: 10px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .btn-danger { width: 100%; background: #ffe4e6; color: #9f1239; border: 1px solid #fecdd3; padding: 11px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .hidden { display: none !important; }
+        .empty-box { text-align: center; padding: 28px 16px; border: 2px dashed #cbd5e1; border-radius: 20px; background: #fff; }
+        .compare-wrap { position: relative; height: 220px; border-radius: 14px; overflow: hidden; border: 1px solid #cbd5e1; }
+        .compare-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .compare-top { position: absolute; top: 0; left: 0; height: 100%; overflow: hidden; border-right: 3px solid #fff; }
+        .compare-range { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: ew-resize; }
+        .info-alert { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 10px 12px; border-radius: 12px; font-size: 12px; margin-bottom: 12px; line-height: 1.4; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="top-row">
+        <div class="brand">
+            <h1>🌱 FloraGest</h1>
+            <p>Valladolid & Mogro</p>
+        </div>
+        <div class="top-actions">
+            <button type="button" class="btn-top" id="btnHelpInstall">📲 Instalar</button>
+            <button type="button" class="btn-top" id="btnOpenSettings">⚙️ Datos</button>
+        </div>
+    </div>
+    <div class="loc-tabs">
+        <button type="button" class="loc-btn active" data-loc="Todas">Todas</button>
+        <button type="button" class="loc-btn" data-loc="Valladolid">Valladolid</button>
+        <button type="button" class="loc-btn" data-loc="Mogro">Mogro</button>
+    </div>
+</header>
+
+<main>
+    <div id="previewWarning" class="info-alert hidden">
+        <strong>⚠️ Estás viendo una vista previa:</strong> Para que los botones y el guardado funcionen al 100% y puedas ponerla en la pantalla de tu móvil, <strong>descarga el archivo y ábrelo directamente en Chrome o Safari</strong>.
+    </div>
+
+    <div class="card stats-bar">
+        <div class="climate-info">
+            <h2 id="climateTitle">Valladolid & Mogro</h2>
+            <p id="climateDesc">Continental seco en Valladolid · Oceánico húmedo en Mogro.</p>
+        </div>
+        <div class="counters">
+            <div class="counter-box">
+                <span class="counter-num" id="statPlants">0</span>
+                <span class="counter-lbl">Plantas</span>
+            </div>
+            <div class="counter-box warn">
+                <span class="counter-num" id="statAlerts">0</span>
+                <span class="counter-lbl">Avisos</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- VISTA PLANTAS -->
+    <section id="view-plants">
+        <div class="search-row">
+            <input type="text" id="searchInput" placeholder="Buscar planta o variedad...">
+            <select id="categoryFilter" style="max-width: 135px;">
+                <option value="Todas">Todas</option>
+                <option value="Frutales e Injertos">Frutales</option>
+                <option value="Césped y Pradera">Césped</option>
+                <option value="Ornamentales y Setos">Ornamentales</option>
+                <option value="Huerto y Aromáticas">Huerto</option>
+            </select>
+        </div>
+        <div id="plantsList"></div>
+    </section>
+
+    <!-- VISTA AVISOS -->
+    <section id="view-alerts" class="hidden">
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+            <div>
+                <strong style="font-size:14px;">Avisos Reales</strong>
+                <p style="margin:2px 0 0; font-size:11px; color:#64748b;">Alarmas en tu calendario o notificaciones</p>
+            </div>
+            <div style="display:flex; gap:6px;">
+                <button type="button" class="btn-secondary" id="btnNotif">🔔 Notificar</button>
+                <button type="button" class="btn-top" id="btnExportICS">📅 Calendario (.ics)</button>
+            </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-size:12px; font-weight:800; color:#475569;">PRÓXIMAS LABORES</span>
+            <button type="button" class="btn-secondary" id="btnNewTask">+ Nuevo Aviso</button>
+        </div>
+        <div id="alertsList"></div>
+    </section>
+</main>
+
+<!-- BARRA INFERIOR -->
+<nav class="bottom-nav">
+    <button type="button" class="nav-item active" data-tab="plants">
+        <span class="nav-icon">🌿</span>
+        <span>Mis Plantas</span>
+    </button>
+    <button type="button" class="nav-item" data-tab="alerts">
+        <span class="nav-icon">🔔</span>
+        <span class="nav-badge hidden" id="navBadge">0</span>
+        <span>Avisos</span>
+    </button>
+    <button type="button" class="nav-item" id="navPhoto">
+        <span class="nav-icon">📷</span>
+        <span>Foto / Salud</span>
+    </button>
+    <button type="button" class="nav-item" id="navAdd">
+        <span class="nav-icon">➕</span>
+        <span>Añadir</span>
+    </button>
+</nav>
+
+<!-- MODAL PLANTA -->
+<div class="modal" id="plantModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3 id="plantModalTitle">Nueva Planta</h3>
+            <button type="button" class="close-btn" data-close="plantModal">✕</button>
+        </div>
+        <form id="plantForm">
+            <input type="hidden" id="plantId">
+            <div class="grid-2 field">
+                <div>
+                    <label>Finca *</label>
+                    <select id="plantLocation" required>
+                        <option value="Valladolid">Valladolid</option>
+                        <option value="Mogro">Mogro</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Categoría *</label>
+                    <select id="plantCategory" required>
+                        <option value="Frutales e Injertos">Frutales e Injertos</option>
+                        <option value="Césped y Pradera">Césped y Pradera</option>
+                        <option value="Ornamentales y Setos">Ornamentales y Setos</option>
+                        <option value="Huerto y Aromáticas">Huerto y Aromáticas</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field">
+                <label>Nombre de la Planta *</label>
+                <input type="text" id="plantName" required placeholder="Ej. Limonero, Césped Entrada, Rosal...">
+            </div>
+            <div class="grid-2 field">
+                <div>
+                    <label>Modelo / Variedad</label>
+                    <input type="text" id="plantVariety" placeholder="Ej. Patrón M-9 / Festuca">
+                </div>
+                <div>
+                    <label>Cantidad / m² *</label>
+                    <input type="text" id="plantQuantity" required placeholder="Ej. 2 uds / 90 m²">
+                </div>
+            </div>
+            <div class="field">
+                <label>Estado Actual</label>
+                <select id="plantHealth">
+                    <option value="Sana">Sana</option>
+                    <option value="En observación">En observación</option>
+                    <option value="Tratamiento activo">Tratamiento activo</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>Notas (Poda, Abono, Injerto)</label>
+                <textarea id="plantNotes" rows="2" placeholder="Detalles..."></textarea>
+            </div>
+            <div class="field" id="autoAlertsRow" style="background:#ecfdf5; padding:10px; border-radius:12px; display:flex; gap:8px; align-items:center;">
+                <input type="checkbox" id="plantAutoAlerts" checked style="width:18px; height:18px;">
+                <label for="plantAutoAlerts" style="margin:0; font-size:12px; color:#064e3b;">Crear avisos automáticos de riego, abono y poda</label>
+            </div>
+            <button type="submit" class="btn-primary">Guardar Planta</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL AVISO -->
+<div class="modal" id="taskModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3>Programar Aviso</h3>
+            <button type="button" class="close-btn" data-close="taskModal">✕</button>
+        </div>
+        <form id="taskForm">
+            <div class="field">
+                <label>Planta *</label>
+                <select id="taskPlantId" required></select>
+            </div>
+            <div class="grid-2 field">
+                <div>
+                    <label>Labor *</label>
+                    <select id="taskType" required>
+                        <option value="Riego">Riego</option>
+                        <option value="Poda">Poda</option>
+                        <option value="Abono">Abono</option>
+                        <option value="Trasplante">Trasplante</option>
+                        <option value="Injerto">Injerto</option>
+                        <option value="Césped">Césped</option>
+                        <option value="Fitosanitario">Fitosanitario</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Fecha *</label>
+                    <input type="date" id="taskDate" required>
+                </div>
+            </div>
+            <div class="field">
+                <label>Repetir cada (días, 0 = sin repetición)</label>
+                <input type="number" id="taskRepeatDays" value="0" min="0">
+            </div>
+            <div class="field">
+                <label>Detalle / Producto</label>
+                <input type="text" id="taskNotes" placeholder="Ej. Abono NPK, poda, fungicida...">
+            </div>
+            <button type="submit" class="btn-primary">Guardar Aviso</button>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL FOTO -->
+<div class="modal" id="photoModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3>Foto y Detección de Enfermedades</h3>
+            <button type="button" class="close-btn" data-close="photoModal">✕</button>
+        </div>
+        <div id="photoNoPlants" class="empty-box hidden">
+            <p style="font-size:13px; margin-bottom:12px;">Añade primero al menos una planta para poder hacerle fotos.</p>
+            <button type="button" class="btn-primary" id="btnPlantFromPhoto">+ Crear Planta</button>
+        </div>
+        <div id="photoFormWrap">
+            <div class="field">
+                <label>Selecciona la Planta *</label>
+                <select id="photoPlantSelect"></select>
+            </div>
+            <div class="grid-2 field">
+                <label style="border:2px dashed #10b981; background:#ecfdf5; border-radius:14px; padding:14px; text-align:center; cursor:pointer; font-size:12px; font-weight:800; color:#065f46;">
+                    📷 Cámara
+                    <input type="file" accept="image/*" capture="environment" id="inputCamera" style="display:none;">
+                </label>
+                <label style="border:2px dashed #94a3b8; background:#f8fafc; border-radius:14px; padding:14px; text-align:center; cursor:pointer; font-size:12px; font-weight:800; color:#334155;">
+                    🖼️ Galería
+                    <input type="file" accept="image/*" id="inputGallery" style="display:none;">
+                </label>
+            </div>
+            <div id="photoPreviewArea" class="hidden">
+                <img id="photoPreviewImg" src="" style="width:100%; height:190px; object-fit:cover; border-radius:14px; margin-bottom:10px;">
+                <button type="button" class="btn-secondary" id="btnDiagnose" style="width:100%; background:#e0e7ff; color:#3730a3; margin-bottom:10px;">✨ Analizar Síntomas / Enfermedad</button>
+                <div id="diagnosisBox" class="hidden" style="background:#eef2ff; border:1px solid #c7d2fe; padding:10px; border-radius:12px; font-size:12px; margin-bottom:10px;"></div>
+                <div class="field">
+                    <input type="text" id="photoNote" placeholder="Nota de evolución (ej. Brote nuevo...)">
+                </div>
+                <button type="button" class="btn-primary" id="btnSavePhoto">Guardar Foto</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EVOLUCIÓN -->
+<div class="modal" id="evolutionModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3 id="evoTitle">Evolución</h3>
+            <button type="button" class="close-btn" data-close="evolutionModal">✕</button>
+        </div>
+        <div id="evoBody"></div>
+    </div>
+</div>
+
+<!-- MODAL INSTALAR -->
+<div class="modal" id="installModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3>📲 Cómo ponerla en la pantalla del móvil</h3>
+            <button type="button" class="close-btn" data-close="installModal">✕</button>
+        </div>
+        <div style="font-size:13px; line-height:1.5; color:#334155;">
+            <p style="background:#fef3c7; padding:10px; border-radius:10px; font-size:12px; color:#92400e;">
+                <strong>Importante:</strong> No intentes instalarla desde el visor interno de Gemini. Primero <strong>descarga el archivo</strong> y ábrelo en tu navegador.
+            </p>
+            <div style="background:#ecfdf5; padding:12px; border-radius:12px; margin-bottom:10px;">
+                <strong style="color:#065f46;">En Android (Google Chrome):</strong>
+                <ol style="margin:6px 0 0; padding-left:18px; font-size:12px;">
+                    <li>Abre la app <strong>Archivos / Descargas</strong> de tu móvil y toca <strong>FloraGest_App.html</strong> eligiendo abrir con <strong>Chrome</strong>.</li>
+                    <li>Pulsa los <strong>3 puntos (⋮)</strong> arriba a la derecha.</li>
+                    <li>Toca <strong>"Añadir a pantalla de inicio"</strong>.</li>
+                </ol>
+            </div>
+            <div style="background:#e0f2fe; padding:12px; border-radius:12px;">
+                <strong style="color:#075985;">En iPhone (Safari):</strong>
+                <ol style="margin:6px 0 0; padding-left:18px; font-size:12px;">
+                    <li>Abre el archivo descargado en <strong>Safari</strong>.</li>
+                    <li>Pulsa el botón <strong>Compartir</strong> (cuadrado con flecha arriba).</li>
+                    <li>Selecciona <strong>"Añadir a pantalla de inicio"</strong>.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DATOS -->
+<div class="modal" id="settingsModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3>⚙️ Copia de Seguridad</h3>
+            <button type="button" class="close-btn" data-close="settingsModal">✕</button>
+        </div>
+        <button type="button" class="btn-primary" id="btnExportJSON" style="margin-bottom:10px;">⬇️ Descargar Copia (.json)</button>
+        <label class="btn-secondary" style="display:block; text-align:center; padding:12px;">
+            ⬆️ Restaurar Copia (.json)
+            <input type="file" accept=".json" id="inputImportJSON" style="display:none;">
+        </label>
+        <button type="button" class="btn-danger" id="btnClearAll">🗑️ Vaciar todo y empezar de cero</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    var STORAGE_KEY = 'floragest_v4_clean';
+    var currentLoc = 'Todas';
+    var currentImg = null;
+    var currentDiag = '';
+    var memoryFallback = { plants: [], tasks: [] };
+
+    function loadState() {
+        try {
+            var raw = window.localStorage.getItem(STORAGE_KEY);
+            return raw ? JSON.parse(raw) : { plants: [], tasks: [] };
+        } catch (e) {
+            return memoryFallback;
+        }
+    }
+
+    var state = loadState();
+
+    function saveState() {
+        try {
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+            memoryFallback = state;
+        }
+        render();
+    }
+
+    if (window.self !== window.top) {
+        document.getElementById('previewWarning').classList.remove('hidden');
+    }
+
+    function todayStr() {
+        return new Date().toISOString().split('T')[0];
+    }
+
+    function addDays(dateStr, days) {
+        var d = new Date(dateStr + 'T12:00:00');
+        d.setDate(d.getDate() + days);
+        return d.toISOString().split('T')[0];
+    }
+
+    function openModal(id) {
+        document.getElementById(id).classList.add('open');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('open');
+    }
+
+    document.querySelectorAll('.close-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            closeModal(this.getAttribute('data-close'));
+        });
+    });
+
+    document.getElementById('btnHelpInstall').addEventListener('click', function() { openModal('installModal'); });
+    document.getElementById('btnOpenSettings').addEventListener('click', function() { openModal('settingsModal'); });
+
+    document.querySelectorAll('.loc-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            currentLoc = this.getAttribute('data-loc');
+            document.querySelectorAll('.loc-btn').forEach(function(b) {
+                b.classList.toggle('active', b.getAttribute('data-loc') === currentLoc);
+            });
+            var title = document.getElementById('climateTitle');
+            var desc = document.getElementById('climateDesc');
+            if (currentLoc === 'Valladolid') {
+                title.textContent = 'Valladolid · Continental Seco';
+                desc.textContent = 'Vigilar heladas tardías, riego en verano y clorosis por cal.';
+            } else if (currentLoc === 'Mogro') {
+                title.textContent = 'Mogro · Oceánico Húmedo';
+                desc.textContent = 'Control de hongos por humedad y musgo en el césped.';
+            } else {
+                title.textContent = 'Valladolid & Mogro';
+                desc.textContent = 'Continental seco en Valladolid · Oceánico húmedo en Mogro.';
+            }
+            render();
+        });
+    });
+
+    function switchTab(tab) {
+        document.getElementById('view-plants').classList.toggle('hidden', tab !== 'plants');
+        document.getElementById('view-alerts').classList.toggle('hidden', tab !== 'alerts');
+        document.querySelectorAll('.nav-item[data-tab]').forEach(function(btn) {
+            btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+        });
+    }
+
+    document.querySelectorAll('.nav-item[data-tab]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            switchTab(this.getAttribute('data-tab'));
+        });
+    });
+
+    function openNewPlant() {
+        document.getElementById('plantForm').reset();
+        document.getElementById('plantId').value = '';
+        document.getElementById('plantModalTitle').textContent = 'Nueva Planta';
+        document.getElementById('autoAlertsRow').classList.remove('hidden');
+        openModal('plantModal');
+    }
+
+    document.getElementById('navAdd').addEventListener('click', openNewPlant);
+    document.getElementById('btnPlantFromPhoto').addEventListener('click', function() {
+        closeModal('photoModal');
+        openNewPlant();
+    });
+
+    function createAutoTasks(plant) {
+        var today = todayStr();
+        var isVa = plant.location === 'Valladolid';
+        var list = [];
+        if (plant.category === 'Césped y Pradera') {
+            list.push({ type: 'Riego', days: isVa ? 3 : 7, note: 'Riego según humedad' });
+            list.push({ type: 'Césped', days: 14, note: 'Siega y revisión de musgo' });
+            list.push({ type: 'Abono', days: 45, note: 'Abonado césped' });
+        } else if (plant.category === 'Frutales e Injertos') {
+            list.push({ type: 'Riego', days: isVa ? 5 : 10, note: 'Riego en alcorque' });
+            list.push({ type: 'Poda', days: 60, note: 'Revisión poda / injerto' });
+            list.push({ type: 'Abono', days: 45, note: 'Abonado frutales' });
+        } else {
+            list.push({ type: 'Riego', days: isVa ? 4 : 8, note: 'Riego moderado' });
+            list.push({ type: 'Abono', days: 40, note: 'Abono mantenimiento' });
+        }
+        list.forEach(function(item, i) {
+            state.tasks.push({
+                id: 't_' + Date.now() + '_' + i,
+                plantId: plant.id,
+                type: item.type,
+                status: 'Pendiente',
+                date: addDays(today, item.days),
+                repeatDays: item.days,
+                notes: item.note
+            });
+        });
+    }
+
+    document.getElementById('plantForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var id = document.getElementById('plantId').value;
+        var existing = state.plants.find(function(x) { return x.id === id; });
+        var obj = {
+            id: id || ('p_' + Date.now()),
+            location: document.getElementById('plantLocation').value,
+            category: document.getElementById('plantCategory').value,
+            name: document.getElementById('plantName').value.trim(),
+            variety: document.getElementById('plantVariety').value.trim(),
+            quantity: document.getElementById('plantQuantity').value.trim(),
+            health: document.getElementById('plantHealth').value,
+            notes: document.getElementById('plantNotes').value.trim(),
+            photos: existing ? existing.photos : []
+        };
+        if (id) {
+            var idx = state.plants.findIndex(function(x) { return x.id === id; });
+            state.plants[idx] = obj;
+        } else {
+            state.plants.push(obj);
+            if (document.getElementById('plantAutoAlerts').checked) {
+                createAutoTasks(obj);
+            }
+        }
+        closeModal('plantModal');
+        saveState();
+    });
+
+    function openNewTask(plantId) {
+        if (state.plants.length === 0) {
+            alert('Primero añade una planta.');
+            openNewPlant();
+            return;
+        }
+        var sel = document.getElementById('taskPlantId');
+        sel.innerHTML = state.plants.map(function(p) {
+            return '<option value="' + p.id + '"' + (p.id === plantId ? ' selected' : '') + '>' + p.name + ' (' + p.location + ')</option>';
+        }).join('');
+        document.getElementById('taskDate').value = todayStr();
+        openModal('taskModal');
+    }
+
+    document.getElementById('btnNewTask').addEventListener('click', function() { openNewTask(''); });
+
+    document.getElementById('taskForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        state.tasks.push({
+            id: 't_' + Date.now(),
+            plantId: document.getElementById('taskPlantId').value,
+            type: document.getElementById('taskType').value,
+            status: 'Pendiente',
+            date: document.getElementById('taskDate').value,
+            repeatDays: parseInt(document.getElementById('taskRepeatDays').value || '0', 10),
+            notes: document.getElementById('taskNotes').value.trim()
+        });
+        closeModal('taskModal');
+        saveState();
+    });
+
+    function openPhoto(plantId) {
+        var has = state.plants.length > 0;
+        document.getElementById('photoNoPlants').classList.toggle('hidden', has);
+        document.getElementById('photoFormWrap').classList.toggle('hidden', !has);
+        if (has) {
+            var sel = document.getElementById('photoPlantSelect');
+            sel.innerHTML = state.plants.map(function(p) {
+                return '<option value="' + p.id + '"' + (p.id === plantId ? ' selected' : '') + '>' + p.name + ' (' + p.location + ')</option>';
+            }).join('');
+            document.getElementById('photoPreviewArea').classList.add('hidden');
+            document.getElementById('diagnosisBox').classList.add('hidden');
+            document.getElementById('photoNote').value = '';
+            currentImg = null;
+            currentDiag = '';
+        }
+        openModal('photoModal');
+    }
+
+    document.getElementById('navPhoto').addEventListener('click', function() { openPhoto(''); });
+
+    function processFile(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+            var img = new Image();
+            img.onload = function() {
+                var canvas = document.createElement('canvas');
+                var scale = Math.min(1, 700 / img.width);
+                canvas.width = img.width * scale;
+                canvas.height = img.height * scale;
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                currentImg = canvas.toDataURL('image/jpeg', 0.72);
+                document.getElementById('photoPreviewImg').src = currentImg;
+                document.getElementById('photoPreviewArea').classList.remove('hidden');
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    document.getElementById('inputCamera').addEventListener('change', processFile);
+    document.getElementById('inputGallery').addEventListener('change', processFile);
+
+    document.getElementById('btnDiagnose').addEventListener('click', function() {
+        var pid = document.getElementById('photoPlantSelect').value;
+        var p = state.plants.find(function(x) { return x.id === pid; });
+        var box = document.getElementById('diagnosisBox');
+        box.classList.remove('hidden');
+        if (p && p.location === 'Mogro') {
+            currentDiag = 'Mogro (humedad): Revisar hongos (oídio/roya) en hojas o musgo en césped. Aplicar cobre/azufre o antimusgo.';
+        } else {
+            currentDiag = 'Valladolid (seco/calizo): Revisar falta de riego, clorosis férrica o pulgón. Aplicar quelato de hierro o jabón potásico.';
+        }
+        box.innerHTML = '<strong>Diagnóstico:</strong> ' + currentDiag + '<br><button type="button" id="btnAddTreat" class="btn-top" style="margin-top:8px;">+ Crear aviso de tratamiento</button>';
+        document.getElementById('btnAddTreat').addEventListener('click', function() {
+            state.tasks.push({
+                id: 't_' + Date.now(),
+                plantId: p.id,
+                type: 'Fitosanitario',
+                status: 'Pendiente',
+                date: todayStr(),
+                repeatDays: 15,
+                notes: currentDiag
+            });
+            saveState();
+            alert('Aviso de tratamiento añadido.');
+        });
+    });
+
+    document.getElementById('btnSavePhoto').addEventListener('click', function() {
+        if (!currentImg) return;
+        var pid = document.getElementById('photoPlantSelect').value;
+        var p = state.plants.find(function(x) { return x.id === pid; });
+        if (!p.photos) p.photos = [];
+        p.photos.push({
+            date: new Date().toLocaleDateString('es-ES'),
+            img: currentImg,
+            note: document.getElementById('photoNote').value.trim() || 'Registro fotográfico',
+            diag: currentDiag
+        });
+        closeModal('photoModal');
+        saveState();
+    });
+
+    function openEvolution(pid) {
+        var p = state.plants.find(function(x) { return x.id === pid; });
+        document.getElementById('evoTitle').textContent = 'Evolución: ' + p.name;
+        var body = document.getElementById('evoBody');
+        if (!p.photos || p.photos.length === 0) {
+            body.innerHTML = '<div class="empty-box"><p style="font-size:13px;">Aún no hay fotos de esta planta.</p></div>';
+        } else {
+            var html = '';
+            if (p.photos.length >= 2) {
+                var first = p.photos[0];
+                var last = p.photos[p.photos.length - 1];
+                html += '<p style="font-size:11px; font-weight:800; color:#475569;">DESLIZA: ANTES (' + first.date + ') VS HOY (' + last.date + ')</p>' +
+                    '<div class="compare-wrap"><img src="' + last.img + '"><div class="compare-top" id="compTop" style="width:50%;"><img src="' + first.img + '"></div><input type="range" min="0" max="100" value="50" class="compare-range" id="compSlider"></div>';
+            }
+            p.photos.slice().reverse().forEach(function(ph) {
+                html += '<div class="card" style="margin-top:10px; padding:10px;"><img src="' + ph.img + '" style="width:100%; height:170px; object-fit:cover; border-radius:10px;"><p style="margin:6px 0 2px; font-size:11px; font-weight:800; color:#047857;">' + ph.date + '</p><p style="margin:0; font-size:13px;">' + ph.note + '</p>' + (ph.diag ? '<p style="margin:6px 0 0; font-size:11px; background:#eef2ff; padding:6px; border-radius:8px;">' + ph.diag + '</p>' : '') + '</div>';
+            });
+            body.innerHTML = html;
+            var slider = document.getElementById('compSlider');
+            if (slider) {
+                slider.addEventListener('input', function() {
+                    document.getElementById('compTop').style.width = this.value + '%';
+                });
+            }
+        }
+        openModal('evolutionModal');
+    }
+
+    document.getElementById('searchInput').addEventListener('input', render);
+    document.getElementById('categoryFilter').addEventListener('change', render);
+
+    document.getElementById('btnNotif').addEventListener('click', function() {
+        if (!('Notification' in window)) {
+            alert('Usa el botón Calendario (.ics) para recibir alarmas reales en tu móvil.');
+            return;
+        }
+        Notification.requestPermission().then(function(perm) {
+            if (perm === 'granted') {
+                new Notification('FloraGest', { body: 'Avisos activados para Valladolid y Mogro.' });
+            } else {
+                alert('Descarga el archivo Calendario (.ics) para tener alarmas nativas en tu teléfono.');
+            }
+        });
+    });
+
+    document.getElementById('btnExportICS').addEventListener('click', function() {
+        var pending = state.tasks.filter(function(t) { return t.status === 'Pendiente'; });
+        if (pending.length === 0) { alert('No hay avisos pendientes.'); return; }
+        var ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//FloraGest//ES\r\n";
+        pending.forEach(function(t) {
+            var p = state.plants.find(function(x) { return x.id === t.plantId; });
+            if (!p) return;
+            var dt = t.date.replace(/-/g, '');
+            ics += "BEGIN:VEVENT\r\nUID:" + t.id + "@floragest\r\nDTSTART;VALUE=DATE:" + dt + "\r\nSUMMARY:🌱 " + t.type + ": " + p.name + " (" + p.location + ")\r\nDESCRIPTION:" + (t.notes || '') + "\r\nEND:VEVENT\r\n";
+        });
+        ics += "END:VCALENDAR";
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
+        a.download = 'Avisos_Plantas.ics';
+        a.click();
+    });
+
+    document.getElementById('btnExportJSON').addEventListener('click', function() {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }));
+        a.download = 'Copia_FloraGest_' + todayStr() + '.json';
+        a.click();
+    });
+
+    document.getElementById('inputImportJSON').addEventListener('change', function(e) {
+        var f = e.target.files[0];
+        if (!f) return;
+        var r = new FileReader();
+        r.onload = function(ev) {
+            try {
+                state = JSON.parse(ev.target.result);
+                saveState();
+                closeModal('settingsModal');
+                alert('Copia restaurada.');
+            } catch (err) {
+                alert('Archivo no válido.');
+            }
+        };
+        r.readAsText(f);
+    });
+
+    document.getElementById('btnClearAll').addEventListener('click', function() {
+        if (!confirm('¿Borrar todas las plantas y avisos?')) return;
+        state = { plants: [], tasks: [] };
+        saveState();
+        closeModal('settingsModal');
+    });
+
+    function render() {
+        var q = document.getElementById('searchInput').value.toLowerCase();
+        var cat = document.getElementById('categoryFilter').value;
+
+        var plants = state.plants.filter(function(p) {
+            var mLoc = currentLoc === 'Todas' || p.location === currentLoc;
+            var mCat = cat === 'Todas' || p.category === cat;
+            var mQ = p.name.toLowerCase().includes(q) || (p.variety && p.variety.toLowerCase().includes(q));
+            return mLoc && mCat && mQ;
+        });
+
+        var tasks = state.tasks.filter(function(t) {
+            var p = state.plants.find(function(x) { return x.id === t.plantId; });
+            return p && t.status === 'Pendiente' && (currentLoc === 'Todas' || p.location === currentLoc);
+        }).sort(function(a, b) { return a.date.localeCompare(b.date); });
+
+        document.getElementById('statPlants').textContent = plants.length;
+        document.getElementById('statAlerts').textContent = tasks.length;
+        var badge = document.getElementById('navBadge');
+        badge.textContent = tasks.length;
+        badge.classList.toggle('hidden', tasks.length === 0);
+
+        var pList = document.getElementById('plantsList');
+        if (plants.length === 0) {
+            pList.innerHTML = '<div class="empty-box"><div style="font-size:34px; margin-bottom:8px;">🌱</div><h3 style="margin:0 0 6px; font-size:16px;">Aún no hay plantas aquí</h3><p style="margin:0 0 14px; font-size:12px; color:#64748b;">Añade tus plantas de Valladolid o Mogro para llevar su mantenimiento y avisos.</p><button type="button" class="btn-primary" id="btnEmptyAdd" style="max-width:220px;">+ Añadir Primera Planta</button></div>';
+            document.getElementById('btnEmptyAdd').addEventListener('click', openNewPlant);
+        } else {
+            pList.innerHTML = plants.map(function(p) {
+                var photo = p.photos && p.photos.length ? p.photos[p.photos.length - 1].img : null;
+                var nextT = tasks.find(function(t) { return t.plantId === p.id; });
+                var locCls = p.location === 'Valladolid' ? 'badge-va' : 'badge-mo';
+                var hCls = p.health === 'Sana' ? 'badge-ok' : (p.health === 'En observación' ? 'badge-obs' : 'badge-bad');
+                return '<div class="plant-card">' +
+                    '<div class="plant-body">' +
+                        '<div class="plant-thumb" data-evo="' + p.id + '">' + (photo ? '<img src="' + photo + '">' : '🌿') + '<span class="photo-count">📷 ' + (p.photos ? p.photos.length : 0) + '</span></div>' +
+                        '<div style="flex:1; min-width:0;">' +
+                            '<div><span class="badge ' + locCls + '">' + p.location + '</span><span class="badge ' + hCls + '">' + p.health + '</span></div>' +
+                            '<h3 class="plant-title">' + p.name + '</h3>' +
+                            '<p class="plant-meta">' + (p.variety || p.category) + ' · <strong>' + p.quantity + '</strong></p>' +
+                            (nextT ? '<p class="plant-next">🔔 ' + nextT.type + ': ' + nextT.date + '</p>' : '') +
+                        '</div>' +
+                    '</div>' +
+                    (p.notes ? '<p class="plant-notes">' + p.notes + '</p>' : '') +
+                    '<div class="plant-actions">' +
+                        '<button type="button" class="act-btn" style="color:#b45309;" data-photo="' + p.id + '">📷 Foto</button>' +
+                        '<button type="button" class="act-btn" style="color:#4338ca;" data-evo="' + p.id + '">🕒 Evol.</button>' +
+                        '<button type="button" class="act-btn" style="color:#047857;" data-task="' + p.id + '">🔔 Aviso</button>' +
+                        '<button type="button" class="act-btn" data-edit="' + p.id + '">✏️</button>' +
+                        '<button type="button" class="act-btn" style="color:#e11d48;" data-del="' + p.id + '">🗑️</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+
+            pList.querySelectorAll('[data-photo]').forEach(function(b) { b.addEventListener('click', function() { openPhoto(this.getAttribute('data-photo')); }); });
+            pList.querySelectorAll('[data-evo]').forEach(function(b) { b.addEventListener('click', function() { openEvolution(this.getAttribute('data-evo')); }); });
+            pList.querySelectorAll('[data-task]').forEach(function(b) { b.addEventListener('click', function() { openNewTask(this.getAttribute('data-task')); }); });
+            pList.querySelectorAll('[data-edit]').forEach(function(b) {
+                b.addEventListener('click', function() {
+                    var p = state.plants.find(function(x) { return x.id === b.getAttribute('data-edit'); });
+                    if (!p) return;
+                    document.getElementById('plantId').value = p.id;
+                    document.getElementById('plantLocation').value = p.location;
+                    document.getElementById('plantCategory').value = p.category;
+                    document.getElementById('plantName').value = p.name;
+                    document.getElementById('plantVariety').value = p.variety;
+                    document.getElementById('plantQuantity').value = p.quantity;
+                    document.getElementById('plantHealth').value = p.health;
+                    document.getElementById('plantNotes').value = p.notes;
+                    document.getElementById('plantModalTitle').textContent = 'Editar Planta';
+                    document.getElementById('autoAlertsRow').classList.add('hidden');
+                    openModal('plantModal');
+                });
+            });
+            pList.querySelectorAll('[data-del]').forEach(function(b) {
+                b.addEventListener('click', function() {
+                    var id = this.getAttribute('data-del');
+                    if (!confirm('¿Eliminar planta?')) return;
+                    state.plants = state.plants.filter(function(x) { return x.id !== id; });
+                    state.tasks = state.tasks.filter(function(x) { return x.plantId !== id; });
+                    saveState();
+                });
+            });
+        }
+
+        var aList = document.getElementById('alertsList');
+        if (tasks.length === 0) {
+            aList.innerHTML = '<div class="empty-box"><p style="font-size:12px; color:#64748b;">No tienes avisos pendientes.</p></div>';
+        } else {
+            var today = todayStr();
+            aList.innerHTML = tasks.map(function(t) {
+                var p = state.plants.find(function(x) { return x.id === t.plantId; });
+                var due = t.date <= today;
+                return '<div class="card" style="border-color:' + (due ? '#fda4af' : '#e2e8f0') + ';">' +
+                    '<div style="display:flex; justify-content:space-between; align-items:flex-start;">' +
+                        '<div><span class="badge ' + (due ? 'badge-bad' : 'badge-obs') + '">' + (due ? '¡Toca hoy!' : t.date) + '</span><span style="font-size:11px; font-weight:700; color:#64748b;">' + p.location + '</span>' +
+                        '<h4 style="margin:4px 0 2px; font-size:14px;">' + t.type + ' · ' + p.name + '</h4>' +
+                        '<p style="margin:0; font-size:12px; color:#475569;">' + (t.notes || '') + '</p></div>' +
+                        '<button type="button" class="close-btn" data-tdel="' + t.id + '" style="width:26px; height:26px; font-size:12px;">✕</button>' +
+                    '</div>' +
+                    '<div style="display:flex; gap:8px; margin-top:10px;">' +
+                        '<button type="button" class="btn-primary" data-tdone="' + t.id + '" style="padding:9px; font-size:12px;">✓ Hecho</button>' +
+                        '<button type="button" class="btn-secondary" data-tsnooze="' + t.id + '">+2 días</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+
+            aList.querySelectorAll('[data-tdone]').forEach(function(b) {
+                b.addEventListener('click', function() {
+                    var t = state.tasks.find(function(x) { return x.id === b.getAttribute('data-tdone'); });
+                    if (!t) return;
+                    if (t.repeatDays > 0) t.date = addDays(todayStr(), t.repeatDays);
+                    else t.status = 'Completada';
+                    saveState();
+                });
+            });
+            aList.querySelectorAll('[data-tsnooze]').forEach(function(b) {
+                b.addEventListener('click', function() {
+                    var t = state.tasks.find(function(x) { return x.id === b.getAttribute('data-tsnooze'); });
+                    if (t) t.date = addDays(t.date, 2);
+                    saveState();
+                });
+            });
+            aList.querySelectorAll('[data-tdel]').forEach(function(b) {
+                b.addEventListener('click', function() {
+                    var id = b.getAttribute('data-tdel');
+                    state.tasks = state.tasks.filter(function(x) { return x.id !== id; });
+                    saveState();
+                });
+            });
+        }
+    }
+
+    render();
+})();
+</script>
+</body>
+</html>
 
